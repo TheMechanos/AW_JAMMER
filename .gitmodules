@@ -1,0 +1,6 @@
+[submodule "Core/Lib/STM32WL_SebixFramework"]
+	path = Core/Lib/STM32WL_SebixFramework
+	url = https://github.com/TheMechanos/STM32WL_SebixFramework.git
+[submodule "Core/Lib/SebixFramework"]
+	path = Core/Lib/SebixFramework
+	url = https://github.com/TheMechanos/SebixFramework.git
