@@ -26,35 +26,36 @@ SKWL* SKWL::getInstance(){
 }
 
 SKWL::SKWL(){
+
 	pinLed[0] = PIN(GPIOC, GPIO_PIN_0);
-	pinLed[1] = PIN(GPIOC, GPIO_PIN_1);
-	pinLed[2] = PIN(GPIOB, GPIO_PIN_5);
+		pinLed[1] = PIN(GPIOC, GPIO_PIN_1);
+		pinLed[2] = PIN(GPIOB, GPIO_PIN_5);
 
-	pinSw[0] = PIN(GPIOB, GPIO_PIN_6);
-	pinSw[1] = PIN(GPIOB, GPIO_PIN_7);
-	pinSw[2] = PIN(GPIOB, GPIO_PIN_3);
+		pinSw[0] = PIN(GPIOB, GPIO_PIN_6);
+		pinSw[1] = PIN(GPIOB, GPIO_PIN_7);
+		pinSw[2] = PIN(GPIOB, GPIO_PIN_3);
 
-	pinRfSwTx = PIN(GPIOA, GPIO_PIN_5);
-	pinRfSwRx = PIN(GPIOA, GPIO_PIN_4);
+		pinRfSwTx = PIN(GPIOA, GPIO_PIN_5);
+		pinRfSwRx = PIN(GPIOA, GPIO_PIN_4);
 
 
 
-	led[0] = OUTPUT_ADVENCED(&pinLed[0]);
-	led[1] = OUTPUT_ADVENCED(&pinLed[1]);
-	led[2] = OUTPUT_ADVENCED(&pinLed[2]);
+		led[0] = OUTPUT_ADVENCED(&pinLed[0]);
+		led[1] = OUTPUT_ADVENCED(&pinLed[1]);
+		led[2] = OUTPUT_ADVENCED(&pinLed[2]);
 
-	button[0] = BUTTON_CLICK(&pinSw[0], 30);
-	button[1] = BUTTON_CLICK(&pinSw[1], 30);
-	button[2] = BUTTON_CLICK(&pinSw[2], 30);
+		button[0] = BUTTON_CLICK(&pinSw[0], 30);
+		button[1] = BUTTON_CLICK(&pinSw[1], 30);
+		button[2] = BUTTON_CLICK(&pinSw[2], 30);
 
-	rfSwTx = OUTPUT_PIN(&pinRfSwTx);
-	rfSwRx = OUTPUT_PIN(&pinRfSwRx);
+		rfSwTx = OUTPUT_PIN(&pinRfSwTx);
+		rfSwRx = OUTPUT_PIN(&pinRfSwRx);
 
-	rfSw = RadioRFSwitch(&rfSwTx, &rfSwRx);
+		rfSw = RadioRFSwitch(&rfSwTx, &rfSwRx);
 
-	sxRadio = SKMRadioSX126X(&subghz, &rfSw);
+		sxRadio = SKMRadioSX126X(&subghz, &rfSw);
 
-	radio = SKMController(&sxRadio);
+		radio = SKMController(&sxRadio);
 
 }
 
@@ -62,92 +63,45 @@ void SKWL::init(){
 
 	HAL_Init();
 
-	//Dołączanie zegara do modułów GPIO
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
+		//Dołączanie zegara do modułów GPIO
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		__HAL_RCC_GPIOC_CLK_ENABLE();
 
-	//Konfiguracja zegara systemowego
-	SystemClock_Config();
+		//Konfiguracja zegara systemowego
+		SystemClock_Config();
 
-	//CONFIG INTERRUPT GROUPING - 4 bits for preemption priority,  0 bits for subpriority
-	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+		//CONFIG INTERRUPT GROUPING - 4 bits for preemption priority,  0 bits for subpriority
+		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
-	//Inicjalizacja switcha radiowego
-	rfSwTx.init();
-	rfSwRx.init();
-	rfSw.init();
-
-
-	led[0].init();
-	led[1].init();
-	led[2].init();
-
-	button[0].init();
-	button[1].init();
-	button[2].init();
+		//Inicjalizacja switcha radiowego
+		rfSwTx.init();
+		rfSwRx.init();
+		rfSw.init();
 
 
-	//Inicjalizacja Radia
-	__HAL_RCC_SUBGHZ_CLK_ENABLE();
-	subghz.init();
+		led[0].init();
+		led[1].init();
+		led[2].init();
 
-	sxRadio.init();
-	sxRadio.config(&sxExampleGFSK);
+		button[0].init();
+		button[1].init();
+		button[2].init();
 
-	radio.init();
 
+		//Inicjalizacja Radia
+		__HAL_RCC_SUBGHZ_CLK_ENABLE();
+		subghz.init();
 
-	initUart();
+		sxRadio.init();
+		sxRadio.config(&sxExampleGFSK);
+
+		radio.init();
+
 
 
 }
 
-void SKWL::initUart(){
-
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
-
-	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LPUART1;
-	PeriphClkInitStruct.Lpuart1ClockSelection = RCC_LPUART1CLKSOURCE_PCLK1;
-	if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK){
-		System::SystemErrorHandler();
-	}
-
-	__HAL_RCC_LPUART1_CLK_ENABLE();
-
-	GPIO_InitStruct.Pin = GPIO_PIN_3 | GPIO_PIN_2;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	GPIO_InitStruct.Alternate = GPIO_AF8_LPUART1;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	hlpuart1.Instance = LPUART1;
-	hlpuart1.Init.BaudRate = 115200;
-	hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
-	hlpuart1.Init.StopBits = UART_STOPBITS_1;
-	hlpuart1.Init.Parity = UART_PARITY_NONE;
-	hlpuart1.Init.Mode = UART_MODE_TX_RX;
-	hlpuart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	hlpuart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-	hlpuart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-	hlpuart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-	hlpuart1.FifoMode = UART_FIFOMODE_DISABLE;
-	if(HAL_UART_Init(&hlpuart1) != HAL_OK){
-		System::SystemErrorHandler();
-	}
-	if(HAL_UARTEx_SetTxFifoThreshold(&hlpuart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK){
-		System::SystemErrorHandler();
-	}
-	if(HAL_UARTEx_SetRxFifoThreshold(&hlpuart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK){
-		System::SystemErrorHandler();
-	}
-	if(HAL_UARTEx_DisableFifoMode(&hlpuart1) != HAL_OK){
-		System::SystemErrorHandler();
-	}
-
-}
 
 void SKWL::iterateCritical(){
 
@@ -165,20 +119,6 @@ void SKWL::iterateNonCritical(){
 	button[2].iterate(TICK);
 
 	radio.iterate();
-
-	size_t siz = logBuffor.size();
-	if(siz > 0){
-		char buffer[siz];
-
-		for (size_t q = 0; q < siz; q++){
-			buffer[q] = logBuffor.front();
-			logBuffor.pop();
-		}
-
-		HAL_UART_Transmit(&SKWL::getInstance()->hlpuart1, (uint8_t*) buffer, siz, 1000);
-	}
-
-
 }
 
 void SKWL::SystemClock_Config(void) {

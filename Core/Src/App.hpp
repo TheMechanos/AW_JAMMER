@@ -15,6 +15,8 @@
 
 #include <Radio/SKM/Packet.hpp>
 
+#include <IC/Sensors/ENS210/ENS210.h>
+
 class App{
 public:
 	App();
@@ -25,6 +27,7 @@ public:
 	static App* getInstance();
 private:
 	static App instance;
+	constexpr static const uint16_t CONFIGS_MAX=3;
 
 	SKWL* dev = SKWL::getInstance();
 
@@ -35,7 +38,15 @@ private:
 	void loop();
 	void loop10ms();
 
-	uint8_t buffer[10];
+	SXExampleConfig configs[CONFIGS_MAX];
+
+	int16_t actualConfig;
+
+	bool tx;
+
+	void setTxConfig(bool tx, uint16_t conf =0 );
+
+
 
 };
 #endif /* INC_APP_HPP_ */

@@ -7,17 +7,15 @@
 
 #include <App.hpp>
 
-
 App App::instance;
 App* App::getInstance(){
 	return &instance;
 }
 
 App::App(){
-	this->lastLoopTick=0;
-	this->loopsInTenMs=0;
+	this->lastLoopTick = 0;
+	this->loopsInTenMs = 0;
 }
-
 
 void App::run(){
 	init();
@@ -25,74 +23,97 @@ void App::run(){
 		loopsInTenMs++;
 		loop();
 
-		if(lastLoopTick < System::getTick()-10){
+		if(lastLoopTick < System::getTick() - 10){
 			loop10ms();
 			System::setLoopsInTenMs(loopsInTenMs);
-			loopsInTenMs=0;
+			loopsInTenMs = 0;
 			lastLoopTick = System::getTick();
 		}
 	}
 
 }
 
-
 void App::init(){
 	dev->init();
 
-	dev->led[0].ON();
+	configs[0].frequency = 433920000;
+	configs[1].frequency = 868350000;
+	configs[3].frequency = 868350000;
 
+	actualConfig = 0;
 
-	SKMPacket pack[3];
+	tx = false;
 
-	pack[0].header.packet.id = 1;
-	pack[0].setDataSize(1);
-
-	pack[1].header.packet.id = 2;
-	pack[1].setDataSize(2);
-
-	pack[2].header.packet.id = 3;
-	pack[2].setDataSize(3);
-
-	dev->radio.send(&pack[0]);
-	dev->radio.send(&pack[1]);
-	dev->radio.send(&pack[2]);
+	setTxConfig(tx, actualConfig);
 
 }
 
-//kontrola id pakietu przy dodawaniu
+void App::setTxConfig(bool tx, uint16_t conf){
+	if(tx){
+		dev->sxRadio.setRx();
+		dev->sxRadio.config(&configs[conf]);
+		dev->sxRadio.setModeTxContinousWave();
+	}else{
+		dev->sxRadio.setRx();
+	}
+
+	//SET CONFIG IN LED
+	for (uint8_t q = 0; q < 3; q++){
+		if(q == actualConfig){
+			dev->led[q].ON();
+		}else{
+			dev->led[q].OFF();
+		}
+	}
+}
 
 void App::loop(){
 
-	if(uint8_t q = dev->button[0].isMultiClick()){
+	if(tx){
+		if((dev->button[0].isPressed() || dev->button[1].isPressed() || dev->button[2].isPressed())){
+			tx = false;
+			setTxConfig(tx, actualConfig);
+		}
 
-		static uint16_t idr=0;
-		SKMPacket pac;
-		pac.header.packet.id = idr++;
-		pac.setDataSize(q);
+	}else{
+		if(dev->button[1].isPressed()){
+			tx = true;
+			setTxConfig(tx, actualConfig);
 
-		dev->radio.send(&pac);
+			for (uint8_t q = 0; q < 3; q++){
+				dev->led[q].OFF();
+			}
 
-		dev->led[2].timeON(300);
-	}
+			dev->led[2].blink(120, 240);
+			HAL_Delay(80);
+			dev->led[1].blink(120, 240);
+			HAL_Delay(80);
+			dev->led[0].blink(120, 240);
 
+		}
 
+		if(dev->button[2].isPressed()){
+			actualConfig++;
+			if(actualConfig >= CONFIGS_MAX){
+				actualConfig = CONFIGS_MAX - 1;
+			}
 
-	//dev->sx.iterate();
+			setTxConfig(tx, actualConfig);
 
-	if(dev->button[2].isMultiClick(2)){ //Send PacketStatusQueue
-		System::log("Packet status Queue (size=%d):", dev->radio.packetStatus.size());
+		}
 
-		for (uint8_t q = 0; q < dev->radio.packetStatus.size(); q++){
-			SKMPacketStatus* s = &dev->radio.packetStatus[q];
-			System::log("ID: %d, status: %d, txTime: %d",s->id,s->status,s->sendedTime);
+		if(dev->button[0].isPressed()){
+			actualConfig--;
+			if(actualConfig < 0){
+				actualConfig = 0;
+			}
+
+			setTxConfig(tx, actualConfig);
 		}
 
 	}
 
-
 }
-
-
 
 void App::loop10ms(){
 	dev->iterateNonCritical();

@@ -59,7 +59,7 @@ uint32_t System::getSKID(){
 }
 
 
-int System::log(const char *format, ...)
+int System::logLn(const char *format, ...)
 {
    va_list arg;
    int done;

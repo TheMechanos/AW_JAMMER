@@ -36,7 +36,7 @@ public:
 	static void get12BUID(uint8_t* address);
 	static uint32_t getSKID();
 
-	static int log(const char *format, ...);
+	static int logLn(const char *format, ...);
 
 
 private:

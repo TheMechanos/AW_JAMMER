@@ -8,7 +8,6 @@
 #ifndef SRC_SKWL_HPP_
 #define SRC_SKWL_HPP_
 
-
 #include <stm32wlxx.h>
 
 #include <BasicTypes/Key/Button.hpp>
@@ -16,7 +15,6 @@
 
 #include <BasicTypes/IO/Input.hpp>
 #include <BasicTypes/IO/Output.hpp>
-
 
 #include <Peripheral/GPIO/PIN.hpp>
 #include <Peripheral/GPIO/IO_Pin.hpp>
@@ -29,12 +27,13 @@
 #include <Radio/Modules/SX126x/SKMRadioSX126X.hpp>
 #include <Radio/SKM/Controllers/SKMController.hpp>
 
+#include <IC/Sensors/ENS210/ENS210.h>
 
 #include <Software/CircuralContainers/CircularQueue.h>
 
+#include <Interfaces/I2C/I2C.hpp>
 
-
-class SKWL{
+class SKWL {
 
 public:
 	SKWL();
@@ -51,9 +50,6 @@ public:
 public:
 	static SKWL INSTANCE;
 	void SystemClock_Config();
-
-	void initUart();
-	UART_HandleTypeDef hlpuart1;
 
 	PIN pinLed[3];
 	PIN pinSw[3];
@@ -74,12 +70,6 @@ public:
 
 	SKMController radio;
 
-
-
-
 };
-
-
-
 
 #endif /* SRC_SKWL_HPP_ */
